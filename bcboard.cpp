@@ -64,7 +64,7 @@ qreal BCBoard::obsticaleSize() const
 
 void BCBoard::init()
 {
-    foreach (const QList<BCObstacle *> &cells, m_cells)
+    foreach (const QList<BCItem *> &cells, m_cells)
         qDeleteAll(cells);
     m_cells.clear();
 
@@ -80,7 +80,7 @@ void BCBoard::init()
     qreal x = 0.0;
     qreal y = 0.0;
     for (int row = 0; row < m_boardSize * 2; ++row) {
-        QList<BCObstacle *> items;
+        QList<BCItem *> items;
         for (int column = 0; column < m_boardSize * 2; ++column) {
             BCGroud *cell = new BCGroud(this);
             connect(this, SIGNAL(cellSizeChanged(qreal)), cell, SLOT(setSize(qreal)));
@@ -116,19 +116,19 @@ void BCBoard::init()
     m_enemyTanks << tank;
 }
 
-BCObstacle *BCBoard::obstacle(int row, int column) const
+BCItem *BCBoard::obstacle(int row, int column) const
 {
     if (row >= m_cells.count() || row < 0 || column < 0)
         return 0;
-    const QList<BCObstacle *> &items = m_cells[row];
+    const QList<BCItem *> &items = m_cells[row];
     if (column >= items.count())
         return 0;
     return items[column];
 }
 
-static BCObstacle *createObstacle(BattleCity::ObstacleType type, BCBoard *parent)
+static BCItem *createObstacle(BattleCity::ObstacleType type, BCBoard *parent)
 {
-    BCObstacle *obstacle = 0;
+    BCItem *obstacle = 0;
     switch (type) {
     case BattleCity::BricksWall:
         obstacle = new BCBricks(parent);
@@ -154,10 +154,10 @@ static BCObstacle *createObstacle(BattleCity::ObstacleType type, BCBoard *parent
 
 void BCBoard::setObstacleType(int row, int column, int type)
 {
-    BCObstacle *obstacle = this->obstacle(row, column);
+    BCItem *obstacle = this->obstacle(row, column);
     if (!obstacle || obstacle->type() == type)
         return;
-    BCObstacle *newObstacle = ::createObstacle(BattleCity::ObstacleType(type), this);
+    BCItem *newObstacle = ::createObstacle(BattleCity::ObstacleType(type), this);
     newObstacle->setPosition(obstacle->row(), obstacle->column());
     newObstacle->setSize(obstacle->size());
     obstacle->deleteLater();
@@ -193,8 +193,8 @@ void BCBoard::setCursor(int type)
 QDataStream &operator << (QDataStream &out, const BCBoard &board)
 {
     out << board.m_boardSize;
-    foreach (const QList<BCObstacle *> &rows, board.m_cells) {
-        foreach (BCObstacle *obstacle, rows)
+    foreach (const QList<BCItem *> &rows, board.m_cells) {
+        foreach (BCItem *obstacle, rows)
             out << obstacle->type();
     }
     return out;

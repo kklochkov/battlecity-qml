@@ -22,24 +22,6 @@
 class BCBoard;
 class QTimer;
 
-class BCMovableItem : public BCItem
-{
-    Q_OBJECT
-
-    friend class BCBoard;
-public:
-    explicit BCMovableItem(QDeclarativeItem *parent = 0);
-
-    virtual bool move(BattleCity::MoveDirection direction) = 0;
-    virtual qreal speed() const = 0;
-
-protected:
-    BattleCity::MoveDirection direction() const { return m_direction; }
-
-private:
-    BattleCity::MoveDirection m_direction;
-};
-
 class BCAbstractTank : public BCMovableItem
 {
     Q_OBJECT
@@ -57,11 +39,9 @@ public:
     bool destroyed() const { return m_destroyed; }
 
 protected:
-    BCBoard *board() const { return m_board; }
     quint8 currentAnimationStep() const { return m_currentAnimationStep; }
 
 private:
-    BCBoard *m_board;
     quint8 m_currentAnimationStep;
     bool m_destroyed;
 };

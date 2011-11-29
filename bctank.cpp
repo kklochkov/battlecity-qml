@@ -22,25 +22,8 @@
 #include "bctank.h"
 #include "bcboard.h"
 
-BCMovableItem::BCMovableItem(QDeclarativeItem *parent) :
-    BCItem(parent),
-    m_direction(BattleCity::Forward)
-{
-    setZValue(1);
-}
-
-bool BCMovableItem::move(BattleCity::MoveDirection direction)
-{
-    if (m_direction != direction) {
-        m_direction = direction;
-        update();
-    }
-    return true;
-}
-
 BCAbstractTank::BCAbstractTank(BCBoard *board) :
     BCMovableItem(board),
-    m_board(board),
     m_currentAnimationStep(0),
     m_destroyed(false)
 {
@@ -87,8 +70,8 @@ bool BCAbstractTank::move(BattleCity::MoveDirection direction)
 
     QList<QGraphicsItem *> items = scene()->items(viewRect);
     foreach (QGraphicsItem *item, items) {
-        BCObstacle *obstacle = qobject_cast<BCObstacle *>(item);
-        if (!obstacle || obstacle->property() == BattleCity::Traversable)
+        BCItem *obstacle = qobject_cast<BCItem *>(item);
+        if (!obstacle || obstacle->itemProperty() == BattleCity::Traversable)
             continue;
         const QRectF obstacleRect(obstacle->x(), obstacle->y(), obstacle->implicitHeight(), obstacle->implicitWidth());
         if (viewRect.intersects(obstacleRect)) {

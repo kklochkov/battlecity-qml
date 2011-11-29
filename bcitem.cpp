@@ -21,11 +21,13 @@
 #include "bcglobal.h"
 #include "bcboard.h"
 
-BCItem::BCItem(QDeclarativeItem *parent) :
-    QDeclarativeItem(parent)
+BCItem::BCItem(BCBoard *parent) :
+    QDeclarativeItem(parent),
+    m_board(parent)
 {
     setFlag(ItemHasNoContents, false);
     setClip(true);
+    setZValue(0);
 }
 
 void BCItem::setPosition(int row, int column)
@@ -40,24 +42,31 @@ void BCItem::reposItem()
     setPos(row() * implicitWidth(), column() * implicitHeight());
 }
 
-BCObstacle::BCObstacle(BCBoard *parent) :
-    BCItem(parent),
-    m_board(parent)
-{
-    setZValue(0);
-}
-
-void BCObstacle::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
+void BCItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
 {
     Q_UNUSED(widget);
+
+    const BattleCity::ObstacleType type = BattleCity::ObstacleType(this->type());
+    if (type < BattleCity::Ground || type > BattleCity::Water)
+        return;
 
 #ifdef BC_DEBUG_RECT
     painter->setOpacity(0.5);
 #endif
 
-    painter->drawPixmap(option->rect, BattleCity::obstacleTexture(BattleCity::ObstacleType(type())));
-    if (m_board && m_board->gridVisible()) {
+    painter->drawPixmap(option->rect, BattleCity::obstacleTexture(type));
+    if (board() && board()->gridVisible()) {
         painter->setPen(Qt::lightGray);
         painter->drawRect(option->rect.adjusted(0, 0, -1, -1));
     }
 }
+
+bool BCMovableItem::move(BattleCity::MoveDirection direction)
+{
+    if (m_direction != direction) {
+        m_direction = direction;
+        update();
+    }
+    return true;
+}
+

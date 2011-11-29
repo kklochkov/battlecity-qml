@@ -22,7 +22,8 @@
 
 class BCBoard;
 class BCEnemyTank;
-class BCObstacle;
+//class BCObstacle;
+class BCItem;
 class BCFalcon;
 class BCPlayerTank;
 
@@ -63,7 +64,7 @@ signals:
 public slots:
 //    int xToRow(qreal x) const;
 //    int yToColumn(qreal y) const;
-    BCObstacle *obstacle(int row, int column) const;
+    BCItem *obstacle(int row, int column) const;
     void setObstacleType(int row, int column, int type);
     void setCursor(int type);
 
@@ -77,7 +78,7 @@ private:
     int m_boardSize;
     qreal m_cellSize;
 
-    mutable QList<QList<BCObstacle *> > m_cells;
+    mutable QList<QList<BCItem *> > m_cells;
 
     bool m_gridVisible;
 

@@ -30,13 +30,23 @@ class BCItem : public QDeclarativeItem
 
     Q_PROPERTY(int row READ row CONSTANT)
     Q_PROPERTY(int column READ column CONSTANT)
+
+    friend class BCBoard;
 public:
-    explicit BCItem(QDeclarativeItem *parent = 0);
+    enum ItemProperty { Traversable, Nontraversable, Destroyable, Movable };
+
+    explicit BCItem(BCBoard *parent = 0);
 
     int row() const { return m_position.x(); }
     int column() const { return m_position.y(); }
 
     qreal size() const { return implicitWidth(); }
+
+    virtual ItemProperty itemProperty() const = 0;
+
+    BCBoard *board() const { return m_board; }
+
+    void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
 
 public slots:
     void setSize(qreal size)
@@ -57,120 +67,125 @@ private:
     void reposItem();
 
 private:
+    BCBoard *m_board;
     QPoint m_position;
 };
 
-class BCObstacle : public BCItem
+class BCTraversableItem : public BCItem
 {
     Q_OBJECT
-
-    friend class BCBoard;
 public:
-    explicit BCObstacle(BCBoard *parent = 0);
+    explicit BCTraversableItem(BCBoard *parent = 0) :
+        BCItem(parent) { }
 
-    virtual BattleCity::ObstacleProperty property() const = 0;
-    void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget = 0);
+    ItemProperty itemProperty() const { return Traversable; }
+};
+
+class BCNontraversableItem : public BCItem
+{
+    Q_OBJECT
+public:
+    explicit BCNontraversableItem(BCBoard *parent = 0) :
+        BCItem(parent) { }
+
+    ItemProperty itemProperty() const { return Nontraversable; }
+};
+
+class BCDestroyableItem : public BCNontraversableItem
+{
+    Q_OBJECT
+public:
+    explicit BCDestroyableItem(BCBoard *parent = 0) :
+        BCNontraversableItem(parent) { }
+
+    ItemProperty itemProperty() const { return Destroyable; }
+};
+
+class BCMovableItem : public BCItem
+{
+    Q_OBJECT
+public:
+    explicit BCMovableItem(BCBoard *parent = 0) :
+        BCItem(parent), m_direction(BattleCity::Forward) { setZValue(1); }
+
+    ItemProperty itemProperty() const { return Movable; }
+
+    virtual bool move(BattleCity::MoveDirection direction) = 0;
+    virtual qreal speed() const = 0;
+
+protected:
+    BattleCity::MoveDirection direction() const { return m_direction; }
 
 private:
-    BCBoard *m_board;
+    BattleCity::MoveDirection m_direction;
 };
 
-class BCTraversableObstacle : public BCObstacle
-{
-    Q_OBJECT
-public:
-    explicit BCTraversableObstacle(BCBoard *parent = 0) :
-        BCObstacle(parent) { }
-
-    virtual BattleCity::ObstacleProperty property() const { return BattleCity::Traversable; }
-};
-
-class BCNontraversableObstacle : public BCObstacle
-{
-    Q_OBJECT
-public:
-    explicit BCNontraversableObstacle(BCBoard *parent = 0) :
-        BCObstacle(parent) { }
-
-    virtual BattleCity::ObstacleProperty property() const { return BattleCity::Nontraversable; }
-};
-
-class BCDestroyableObstacle : public BCNontraversableObstacle
-{
-    Q_OBJECT
-public:
-    explicit BCDestroyableObstacle(BCBoard *parent = 0) :
-        BCNontraversableObstacle(parent) { }
-
-    virtual BattleCity::ObstacleProperty property() const { return BattleCity::Destroyable; }
-};
-
-class BCGroud : public BCTraversableObstacle
+class BCGroud : public BCTraversableItem
 {
     Q_OBJECT
 public:
     explicit BCGroud(BCBoard *parent = 0) :
-        BCTraversableObstacle(parent) { }
+        BCTraversableItem(parent) { }
 
     int type() const { return BattleCity::Ground; }
 };
 
-class BCIce : public BCTraversableObstacle
+class BCIce : public BCTraversableItem
 {
     Q_OBJECT
 public:
     explicit BCIce(BCBoard *parent = 0) :
-        BCTraversableObstacle(parent) { }
+        BCTraversableItem(parent) { }
 
     int type() const { return BattleCity::Ice; }
 };
 
-class BCCamouflage : public BCTraversableObstacle
+class BCCamouflage : public BCTraversableItem
 {
     Q_OBJECT
 public:
     explicit BCCamouflage(BCBoard *parent = 0) :
-        BCTraversableObstacle(parent) { setZValue(1); }
+        BCTraversableItem(parent) { setZValue(1); }
 
     int type() const { return BattleCity::Camouflage; }
 };
 
-class BCWater : public BCNontraversableObstacle
+class BCWater : public BCNontraversableItem
 {
     Q_OBJECT
 public:
     explicit BCWater(BCBoard *parent = 0) :
-        BCNontraversableObstacle(parent) { }
+        BCNontraversableItem(parent) { }
 
     int type() const { return BattleCity::Water; }
 };
 
-class BCBricks : public BCDestroyableObstacle
+class BCBricks : public BCDestroyableItem
 {
     Q_OBJECT
 public:
     explicit BCBricks(BCBoard *parent = 0) :
-        BCDestroyableObstacle(parent) { }
+        BCDestroyableItem(parent) { }
 
     int type() const { return BattleCity::BricksWall; }
 };
 
-class BCConcrete : public BCDestroyableObstacle
+class BCConcrete : public BCDestroyableItem
 {
     Q_OBJECT
 public:
     explicit BCConcrete(BCBoard *parent = 0) :
-        BCDestroyableObstacle(parent) { }
+        BCDestroyableItem(parent) { }
 
     int type() const { return BattleCity::ConcreteWall; }
 };
 
-class BCFalcon : public BCDestroyableObstacle
+class BCFalcon : public BCDestroyableItem
 {
     Q_OBJECT
 public:
     explicit BCFalcon(BCBoard *parent = 0) :
-        BCDestroyableObstacle(parent) { }
+        BCDestroyableItem(parent) { }
 
     int type() const { return BattleCity::Falcon; }
 };
