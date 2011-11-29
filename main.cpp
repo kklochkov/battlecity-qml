@@ -2,7 +2,7 @@
 #include <QtDeclarative>
 
 #include "qmlapplicationviewer.h"
-#include "bcglobal.h"
+#include "engine/bcglobal.h"
 
 Q_DECL_EXPORT int main(int argc, char *argv[])
 {

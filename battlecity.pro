@@ -31,22 +31,22 @@ symbian:TARGET.CAPABILITY += NetworkServices
 
 # The .cpp file which was generated for your project. Feel free to hack it.
 SOURCES += main.cpp \
-    bcboard.cpp \
-    bcitem.cpp \
-    bcmapsmanager.cpp \
-    bctank.cpp \
-    bcglobal.cpp
+    engine/bcboard.cpp \
+    engine/bcitem.cpp \
+    engine/bcmapsmanager.cpp \
+    engine/bctank.cpp \
+    engine/bcglobal.cpp
 
 # Please do not modify the following two lines. Required for deployment.
 include(qmlapplicationviewer/qmlapplicationviewer.pri)
 qtcAddDeployment()
 
 HEADERS += \
-    bcboard.h \
-    bcitem.h \
-    bcmapsmanager.h \
-    bctank.h \
-    bcglobal.h
+    engine/bcboard.h \
+    engine/bcitem.h \
+    engine/bcmapsmanager.h \
+    engine/bctank.h \
+    engine/bcglobal.h
 
 RESOURCES += \
     battlecity.qrc
