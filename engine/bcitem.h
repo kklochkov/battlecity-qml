@@ -37,8 +37,8 @@ public:
 
     explicit BCItem(BCBoard *parent = 0);
 
-    int row() const { return m_position.x(); }
-    int column() const { return m_position.y(); }
+    int row() const { return m_position.y(); }
+    int column() const { return m_position.x(); }
 
     qreal size() const { return implicitWidth(); }
 

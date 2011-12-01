@@ -59,7 +59,7 @@ void BCBoard::setCellSize(qreal size)
 
 qreal BCBoard::obsticaleSize() const
 {
-    return m_cellSize / 2;
+    return m_cellSize / 2.0;
 }
 
 void BCBoard::init()
@@ -77,8 +77,6 @@ void BCBoard::init()
     const int size = m_boardSize * m_cellSize + 1;
     setImplicitWidth(size);
     setImplicitHeight(size);
-    qreal x = 0.0;
-    qreal y = 0.0;
     for (int row = 0; row < m_boardSize * 2; ++row) {
         QList<BCItem *> items;
         for (int column = 0; column < m_boardSize * 2; ++column) {
@@ -87,31 +85,31 @@ void BCBoard::init()
             cell->setPosition(row, column);
             cell->setSize(obsticaleSize());
             items << cell;
-            x += obsticaleSize();
         }
         m_cells << items;
-        x = 0.0;
-        y += obsticaleSize();
     }
 
     m_playerTank = new BCPlayerTank(this);
     m_playerTank->setSize(m_cellSize);
-    m_playerTank->setPosition(4, 12);
+    m_playerTank->setPosition(12, 4);
 
     m_falcon = new BCFalcon(this);
     m_falcon->setSize(m_cellSize);
-    m_falcon->setPosition(6, 12);
+    m_falcon->setPosition(12, 6);
 
     static const quint8 enemyTanksCount = 20;
 //    for (quint8 i = 0; i < enemyTanksCount; ++i) {
 
 //    }
+//    BCBasicTank *tank = new BCBasicTank(this);
+//    BCFastTank *tank = new BCFastTank(this);
+//    BCPowerTank *tank = new BCPowerTank(this);
     BCArmorTank *tank = new BCArmorTank(this);
     tank->setSize(m_cellSize);
-    tank->setPosition(0, 0);
+    tank->setPosition(0, 0); //TODO: fix this
     tank->setBonus(true);
-    tank->hit();
-    tank->hit();
+//    tank->hit();
+//    tank->hit();
 //    tank->hit();
     m_enemyTanks << tank;
 }

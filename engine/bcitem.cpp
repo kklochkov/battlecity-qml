@@ -32,15 +32,41 @@ BCItem::BCItem(BCBoard *parent) :
 
 void BCItem::setPosition(int row, int column)
 {
-    m_position.setX(row);
-    m_position.setY(column);
+//    m_position.setX(row);
+//    m_position.setY(column);
+    m_position.setX(column);
+    m_position.setY(row);
     reposItem();
 }
 
 void BCItem::reposItem()
 {
-    setPos(row() * implicitWidth(), column() * implicitHeight());
+//    setPos(row() * implicitWidth(), column() * implicitHeight());
+    setPos(column() * implicitWidth(), row() * implicitHeight());
 }
+
+#ifdef BC_DEBUG_RECT
+static QColor rectColor(BattleCity::ObstacleType type)
+{
+    QColor color;
+    switch (type) {
+    case BattleCity::Ice: color = Qt::white;
+        break;
+    case BattleCity::ConcreteWall: color = Qt::lightGray;
+        break;
+    case BattleCity::BricksWall: color = Qt::darkRed;
+        break;
+    case BattleCity::Water: color = Qt::blue;
+        break;
+    case BattleCity::Camouflage: color = Qt::green;
+        break;
+    default: color = Qt::black;
+        break;
+    }
+//    color = QColor(qrand() % 255, qrand() % 255, qrand() % 255);
+    return color;
+}
+#endif
 
 void BCItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
 {
@@ -52,13 +78,15 @@ void BCItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QW
 
 #ifdef BC_DEBUG_RECT
     painter->setOpacity(0.5);
-#endif
-
+    painter->setPen(rectColor(type));
+    painter->drawRect(option->rect);
+#else
     painter->drawPixmap(option->rect, BattleCity::obstacleTexture(type));
     if (board() && board()->gridVisible()) {
         painter->setPen(Qt::lightGray);
         painter->drawRect(option->rect.adjusted(0, 0, -1, -1));
     }
+#endif
 }
 
 bool BCMovableItem::move(BattleCity::MoveDirection direction)
@@ -69,4 +97,3 @@ bool BCMovableItem::move(BattleCity::MoveDirection direction)
     }
     return true;
 }
-

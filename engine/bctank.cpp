@@ -46,34 +46,35 @@ bool BCAbstractTank::move(BattleCity::MoveDirection direction)
     qreal x = this->x();
     qreal y = this->y();
     QRectF viewRect;
+    static const qreal extraPixel = 1.0;
 
     if (direction == BattleCity::Left) {
         x -= speed;
-        viewRect.setRect(this->x() - 2 * speed, this->y(), speed, implicitHeight());
+        viewRect.setRect(this->x() - speed, this->y(), speed, implicitHeight() + extraPixel);
     }
     if (direction == BattleCity::Right) {
         x += speed;
-        viewRect.setRect(this->x() + implicitWidth() + speed, this->y(), speed, implicitHeight());
+        viewRect.setRect(this->x() + implicitWidth() + speed + extraPixel, this->y(), speed, implicitHeight() + extraPixel);
     }
     if (direction == BattleCity::Forward) {
         y -= speed;
-        viewRect.setRect(this->x(), this->y() - 2 * speed, implicitWidth(), speed);
+        viewRect.setRect(this->x(), this->y() - speed, implicitWidth() + extraPixel, speed);
     }
     if (direction == BattleCity::Backward) {
         y += speed;
-        viewRect.setRect(this->x(), this->y() + implicitHeight() + speed, implicitWidth(), speed);
+        viewRect.setRect(this->x(), this->y() + implicitHeight() + speed + extraPixel, implicitWidth() + extraPixel, speed);
     }
 
 #ifdef BC_DEBUG_RECT
     board()->setDebugRect(viewRect);
 #endif
 
-    QList<QGraphicsItem *> items = scene()->items(viewRect);
+    const QList<QGraphicsItem *> items = scene()->items(viewRect);
     foreach (QGraphicsItem *item, items) {
         BCItem *obstacle = qobject_cast<BCItem *>(item);
-        if (!obstacle || obstacle->itemProperty() == BattleCity::Traversable)
+        if (item == this || !obstacle || obstacle->itemProperty() == BattleCity::Traversable)
             continue;
-        const QRectF obstacleRect(obstacle->x(), obstacle->y(), obstacle->implicitHeight(), obstacle->implicitWidth());
+        const QRectF obstacleRect(obstacle->x(), obstacle->y(), obstacle->implicitWidth(), obstacle->implicitHeight());
         if (viewRect.intersects(obstacleRect)) {
             if (direction == BattleCity::Left)
                 x = obstacle->x() + obstacle->implicitWidth();
@@ -90,11 +91,11 @@ bool BCAbstractTank::move(BattleCity::MoveDirection direction)
     if (x < 0 && direction == BattleCity::Left)
         x = 0;
     if (((x + implicitWidth()) >= board()->implicitWidth()) && direction == BattleCity::Right)
-        x = board()->implicitWidth() - implicitWidth();
+        x = board()->implicitWidth() - implicitWidth() - extraPixel;
     if (y < 0 && direction == BattleCity::Forward)
         y = 0;
     if (((y + implicitHeight()) >= board()->implicitHeight()) && direction == BattleCity::Backward)
-        y = board()->implicitHeight() - implicitHeight();
+        y = board()->implicitHeight() - implicitHeight() - extraPixel;
 
     setPos(x, y);
     update();
@@ -114,7 +115,12 @@ BCEnemyTank::BCEnemyTank(BCBoard *board) :
 void BCEnemyTank::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
 {
     Q_UNUSED(widget);
+#ifdef BC_DEBUG_RECT
+    painter->setPen(Qt::white);
+    painter->drawRect(option->rect);
+#else
     painter->drawPixmap(option->rect, BattleCity::tankTexture(BattleCity::TankType(type()), direction(), currentAnimationStep(), m_bonusTexture));
+#endif
 }
 
 void BCEnemyTank::setBonus(bool bonus)
@@ -180,6 +186,10 @@ void BCArmorTank::timerFired()
 
 void BCArmorTank::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
 {
+#ifdef BC_DEBUG_RECT
+    painter->setPen(Qt::white);
+    painter->drawRect(option->rect);
+#else
     if (bonus() || m_currentHealth == health() - 3) {
         BCEnemyTank::paint(painter, option, widget);
         return;
@@ -196,10 +206,16 @@ void BCArmorTank::paint(QPainter *painter, const QStyleOptionGraphicsItem *optio
             painter->drawPixmap(option->rect, BattleCity::armorTankGreenTexture(direction(), currentAnimationStep()));
         }
     }
+#endif
 }
 
 void BCPlayerTank::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
 {
     Q_UNUSED(widget);
+#ifdef BC_DEBUG_RECT
+    painter->setPen(Qt::white);
+    painter->drawRect(option->rect);
+#else
     painter->drawPixmap(option->rect, BattleCity::player1TankTexture(direction(), currentAnimationStep()));
+#endif
 }
