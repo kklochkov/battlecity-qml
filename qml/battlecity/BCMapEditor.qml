@@ -11,6 +11,8 @@ Rectangle {
         id: mapsManager
 
         Component.onCompleted: mapsManager.loadMap(mapsManager.maps[0], board)
+
+        onMapLoaded: internal.init()
     }
 
     Row {
@@ -161,6 +163,7 @@ Rectangle {
                                 tempBonus = !bonus;
                             var tankType = internal.tanks[nextIndex];
                             tanksModel.set(index, {"bonus": tempBonus, "type": tankType, "index": index});
+                            board.setEnemyTankType(index, tankType, tempBonus);
                         }
                     }
                 }
@@ -198,12 +201,10 @@ Rectangle {
 
     ListModel {
         id: obstacleModel
-        Component.onCompleted: internal.init()
     }
 
     ListModel {
         id: tanksModel
-        Component.onCompleted: internal.init()
     }
 
     QtObject {
@@ -223,26 +224,10 @@ Rectangle {
             obstacleModel.append({"obstacle": BattleCity.Water});
 
             tanksModel.clear();
-            tanksModel.append({"bonus": false, "type": BattleCity.Basic, "index": 0});
-            tanksModel.append({"bonus": false, "type": BattleCity.Basic, "index": 1});
-            tanksModel.append({"bonus": false, "type": BattleCity.Fast, "index": 2});
-            tanksModel.append({"bonus": false, "type": BattleCity.Fast, "index": 3});
-            tanksModel.append({"bonus": false, "type": BattleCity.Basic, "index": 4});
-            tanksModel.append({"bonus": true, "type": BattleCity.Basic, "index": 5});
-            tanksModel.append({"bonus": false, "type": BattleCity.Power, "index": 6});
-            tanksModel.append({"bonus": false, "type": BattleCity.Power, "index": 7});
-            tanksModel.append({"bonus": false, "type": BattleCity.Fast, "index": 8});
-            tanksModel.append({"bonus": false, "type": BattleCity.Fast, "index": 9});
-            tanksModel.append({"bonus": false, "type": BattleCity.Power, "index": 10});
-            tanksModel.append({"bonus": true, "type": BattleCity.Power, "index": 11});
-            tanksModel.append({"bonus": false, "type": BattleCity.Basic, "index": 12});
-            tanksModel.append({"bonus": false, "type": BattleCity.Basic, "index": 13});
-            tanksModel.append({"bonus": false, "type": BattleCity.Fast, "index": 14});
-            tanksModel.append({"bonus": false, "type": BattleCity.Fast, "index": 15});
-            tanksModel.append({"bonus": false, "type": BattleCity.Power, "index": 16});
-            tanksModel.append({"bonus": true, "type": BattleCity.Power, "index": 17});
-            tanksModel.append({"bonus": false, "type": BattleCity.Armor, "index": 18});
-            tanksModel.append({"bonus": false, "type": BattleCity.Armor, "index": 19});
+            for (var index = 0; index < board.enemyTanksCount; ++index) {
+                var tank = board.enemyTank(index);
+                tanksModel.append({"bonus": tank.bonus, "type": tank.type, "index": index});
+            }
         }
 
         function nextIndex(tankType)

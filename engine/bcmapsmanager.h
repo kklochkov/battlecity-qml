@@ -32,11 +32,13 @@ public:
 
     QStringList maps() const { return m_mapsList; }
 
-    Q_INVOKABLE bool saveMap(BCBoard *board) const;
-    Q_INVOKABLE bool loadMap(const QString &mapName, BCBoard *board) const;
+    Q_INVOKABLE bool saveMap(BCBoard *board);
+    Q_INVOKABLE bool loadMap(const QString &mapName, BCBoard *board);
 
 signals:
     void mapsListChanged();
+    void mapSaved();
+    void mapLoaded();
 
 private slots:
     void reloadMapsList();

@@ -53,7 +53,7 @@ void BCMapsManager::reloadMapsList()    //TODO: optimaze this later
     emit mapsListChanged();
 }
 
-bool BCMapsManager::saveMap(BCBoard *board) const
+bool BCMapsManager::saveMap(BCBoard *board)
 {
     QFile file(QString("%1/%2%3.%4").arg(m_mapsDir).arg(BC_STAGE).arg(m_lastStage + 1).arg(BC_MAP_EXT));
     if (!file.open(QIODevice::WriteOnly))
@@ -70,15 +70,17 @@ bool BCMapsManager::saveMap(BCBoard *board) const
     board->setGridVisible(gridVisible);
 
     QMetaObject::invokeMethod(const_cast<BCMapsManager *>(this), "reloadMapsList");
+    emit mapSaved();
     return true;
 }
 
-bool BCMapsManager::loadMap(const QString &mapName, BCBoard *board) const
+bool BCMapsManager::loadMap(const QString &mapName, BCBoard *board)
 {
     QFile file(QString("%1/%2").arg(m_mapsDir).arg(mapName));
     if (!file.open(QIODevice::ReadOnly))
         return false;
     QDataStream in(&file);
     in >> (*board);
+    emit mapLoaded();
     return true;
 }

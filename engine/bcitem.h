@@ -32,6 +32,8 @@ class BCItem : public QDeclarativeItem
     Q_PROPERTY(int column READ column CONSTANT)
 
     friend class BCBoard;
+
+    Q_PROPERTY(int type READ type CONSTANT)
 public:
     enum ItemProperty { Traversable, Nontraversable, Destroyable, Movable };
 

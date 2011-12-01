@@ -44,6 +44,7 @@ static void initTankTextureFiles(QMap<QString, QString> &map, const QString &qrc
 void BattleCity::init()
 {
     qmlRegisterUncreatableType<BattleCity>(BATTLE_CITY_URI, 1, 0, "BattleCity", "");
+    qmlRegisterUncreatableType<BCEnemyTank>(BATTLE_CITY_URI, 1, 0, "BCEnemyTank", "");
     qmlRegisterType<BCBoard>(BATTLE_CITY_URI, 1, 0, "BCBoard");
     qmlRegisterType<BCMapsManager>(BATTLE_CITY_URI, 1, 0, "BCMapsManager");
     qmlRegisterType<Pixmap>(BATTLE_CITY_URI, 1, 0, "Pixmap");

@@ -51,6 +51,8 @@ class BCEnemyTank : public BCAbstractTank
     Q_OBJECT
 
     Q_ENUMS(Type)
+
+    Q_PROPERTY(bool bonus READ bonus NOTIFY bonusChanged)
 public:
     explicit BCEnemyTank(BCBoard *board);
 
@@ -67,6 +69,9 @@ public:
 
 protected slots:
     virtual void timerFired();
+
+signals:
+    void bonusChanged();
 
 private:
     bool m_bonus;

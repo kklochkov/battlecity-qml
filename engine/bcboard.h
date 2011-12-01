@@ -38,6 +38,7 @@ class BCBoard : public QDeclarativeItem
     Q_PROPERTY(qreal cellSize READ cellSize WRITE setCellSize NOTIFY cellSizeChanged)
     Q_PROPERTY(qreal obsticaleSize READ obsticaleSize NOTIFY cellSizeChanged)
     Q_PROPERTY(bool gridVisible READ gridVisible WRITE setGridVisible NOTIFY gridVisibleChanged)
+    Q_PROPERTY(quint8 enemyTanksCount READ enemyTanksCount CONSTANT)
 public:
     explicit BCBoard(QDeclarativeItem *parent = 0);
 
@@ -56,17 +57,19 @@ public:
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
 #endif
 
+    static quint8 enemyTanksCount() { return 20; }
+
 signals:
     void boardSizeChanged();
     void cellSizeChanged(qreal size);
     void gridVisibleChanged();
 
 public slots:
-//    int xToRow(qreal x) const;
-//    int yToColumn(qreal y) const;
     BCItem *obstacle(int row, int column) const;
     void setObstacleType(int row, int column, int type);
     void setCursor(int type);
+    BCEnemyTank *enemyTank(int index) const;
+    void setEnemyTankType(int index, int type, bool bonus);
 
 protected:
     void keyPressEvent(QKeyEvent *event);

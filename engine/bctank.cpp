@@ -136,6 +136,7 @@ void BCEnemyTank::setBonus(bool bonus)
     } else {
         m_timer->stop();
     }
+    emit bonusChanged();
 }
 
 void BCEnemyTank::timerFired()

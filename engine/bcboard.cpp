@@ -22,6 +22,26 @@
 #include "bcglobal.h"
 #include "bctank.h"
 
+BCEnemyTank *createEnemyTank(BattleCity::TankType type, BCBoard *parent)
+{
+    BCEnemyTank *tank = 0;
+    switch (type) {
+    case BattleCity::Fast:
+        tank = new BCFastTank(parent);
+        break;
+    case BattleCity::Power:
+        tank = new BCPowerTank(parent);
+        break;
+    case BattleCity::Armor:
+        tank = new BCArmorTank(parent);
+        break;
+    default:
+        tank = new BCBasicTank(parent);
+        break;
+    }
+    return tank;
+}
+
 BCBoard::BCBoard(QDeclarativeItem *parent) :
     QDeclarativeItem(parent),
     m_boardSize(13),
@@ -97,21 +117,32 @@ void BCBoard::init()
     m_falcon->setSize(m_cellSize);
     m_falcon->setPosition(12, 6);
 
-    static const quint8 enemyTanksCount = 20;
-//    for (quint8 i = 0; i < enemyTanksCount; ++i) {
+    QList<BattleCity::TankType> tanks;
+    tanks << BattleCity::Basic << BattleCity::Basic
+          << BattleCity::Fast << BattleCity::Fast
+          << BattleCity::Basic << BattleCity::Basic
+          << BattleCity::Power << BattleCity::Power
+          << BattleCity::Fast << BattleCity::Fast
+          << BattleCity::Power << BattleCity::Power
+          << BattleCity::Basic << BattleCity::Basic
+          << BattleCity::Fast << BattleCity::Fast
+          << BattleCity::Power << BattleCity::Power
+          << BattleCity::Armor << BattleCity::Armor;
 
-//    }
-//    BCBasicTank *tank = new BCBasicTank(this);
-//    BCFastTank *tank = new BCFastTank(this);
-//    BCPowerTank *tank = new BCPowerTank(this);
-    BCArmorTank *tank = new BCArmorTank(this);
-    tank->setSize(m_cellSize);
-    tank->setPosition(0, 0); //TODO: fix this
-    tank->setBonus(true);
-//    tank->hit();
-//    tank->hit();
-//    tank->hit();
-    m_enemyTanks << tank;
+    for (quint8 i = 0; i < enemyTanksCount(); ++i) {
+        BCEnemyTank *tank = createEnemyTank(tanks[i], this);
+        tank->setSize(m_cellSize);
+        if (i % 3 == 1) {
+            tank->setPosition(0, 6);
+        } else if (i % 3 == 2) {
+            tank->setPosition(0, 12);
+        }
+        m_enemyTanks << tank;
+    }
+
+    m_enemyTanks[5]->setBonus(true);
+    m_enemyTanks[11]->setBonus(true);
+    m_enemyTanks[17]->setBonus(true);
 }
 
 BCItem *BCBoard::obstacle(int row, int column) const
@@ -162,16 +193,6 @@ void BCBoard::setObstacleType(int row, int column, int type)
     m_cells[row][column] = newObstacle;
 }
 
-//int BCBoard::xToRow(qreal x) const
-//{
-//    return (qRound(x) % qRound(implicitWidth())) / obsticaleSize();
-//}
-
-//int BCBoard::yToColumn(qreal y) const
-//{
-//    return (qRound(y) % qRound(implicitHeight())) / obsticaleSize();
-//}
-
 void BCBoard::setGridVisible(bool visible)
 {
     if (m_gridVisible == visible)
@@ -195,6 +216,8 @@ QDataStream &operator << (QDataStream &out, const BCBoard &board)
         foreach (BCItem *obstacle, rows)
             out << obstacle->type();
     }
+    foreach (const BCEnemyTank *tank, board.m_enemyTanks)
+        out << tank->type() << tank->bonus();
     return out;
 }
 
@@ -209,7 +232,12 @@ QDataStream &operator >> (QDataStream &in, BCBoard &board)
             board.setObstacleType(row, colum, type);
         }
     }
-
+    for (int index = 0; index < board.enemyTanksCount(); ++index) {
+        int type = -1;
+        bool bonus = false;
+        in >> type >> bonus;
+        board.setEnemyTankType(index, type, bonus);
+    }
     return in;
 }
 
@@ -231,3 +259,26 @@ void BCBoard::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, Q
     painter->fillRect(m_debugRect, Qt::red);
 }
 #endif
+
+BCEnemyTank *BCBoard::enemyTank(int index) const
+{
+    if (index < 0 || index >= m_enemyTanks.count())
+        return 0;
+    return m_enemyTanks[index];
+}
+
+void BCBoard::setEnemyTankType(int index, int type, bool bonus)
+{
+    BCEnemyTank *tank = enemyTank(index);
+    if (!tank)
+        return;
+    if (tank->type() != type) {
+        BCEnemyTank *newTank = ::createEnemyTank(BattleCity::TankType(type), this);
+        newTank->setPosition(tank->row(), tank->column());
+        newTank->setSize(tank->size());
+        tank->deleteLater();
+        m_enemyTanks[index] = newTank;
+        tank = newTank;
+    }
+    tank->setBonus(bonus);
+}
