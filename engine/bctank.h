@@ -19,14 +19,17 @@
 
 #include "bcitem.h"
 
+#include <QPointer>
+
 class BCBoard;
 class QTimer;
+class BCProjectile;
 
 class BCAbstractTank : public BCMovableItem
 {
     Q_OBJECT
 public:
-    explicit BCAbstractTank(BCBoard *board);
+    explicit BCAbstractTank(BattleCity::MoveDirection direction, BCBoard *board);
 
     bool move(BattleCity::MoveDirection direction);
 
@@ -38,12 +41,18 @@ public:
 
     bool destroyed() const { return m_destroyed; }
 
+    void fire();
+
+private slots:
+    void projectileExploded();
+
 protected:
     quint8 currentAnimationStep() const { return m_currentAnimationStep; }
 
 private:
     quint8 m_currentAnimationStep;
     bool m_destroyed;
+    QPointer<BCProjectile> m_projectile;
 };
 
 class BCEnemyTank : public BCAbstractTank
@@ -141,7 +150,7 @@ class BCPlayerTank : public BCAbstractTank
     Q_OBJECT
 public:
     explicit BCPlayerTank(BCBoard *board) :
-        BCAbstractTank(board) { }
+        BCAbstractTank(BattleCity::Forward, board) { }
 
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget = 0);
 };

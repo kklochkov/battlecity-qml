@@ -126,5 +126,9 @@
         <file>images/tanks/player1/three_stars/left_2.png</file>
         <file>images/tanks/player1/three_stars/right_1.png</file>
         <file>images/tanks/player1/three_stars/right_2.png</file>
+        <file>images/projectile/backward.png</file>
+        <file>images/projectile/forward.png</file>
+        <file>images/projectile/left.png</file>
+        <file>images/projectile/right.png</file>
     </qresource>
 </RCC>

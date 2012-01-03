@@ -45,6 +45,7 @@ void BattleCity::init()
 {
     qmlRegisterUncreatableType<BattleCity>(BATTLE_CITY_URI, 1, 0, "BattleCity", "");
     qmlRegisterUncreatableType<BCEnemyTank>(BATTLE_CITY_URI, 1, 0, "BCEnemyTank", "");
+    // @uri BattleCity
     qmlRegisterType<BCBoard>(BATTLE_CITY_URI, 1, 0, "BCBoard");
     qmlRegisterType<BCMapsManager>(BATTLE_CITY_URI, 1, 0, "BCMapsManager");
     qmlRegisterType<Pixmap>(BATTLE_CITY_URI, 1, 0, "Pixmap");
@@ -53,7 +54,7 @@ void BattleCity::init()
 
     QMap<QString, QString> map;
 
-    QMap<ObstacleType, QString> obstalcesFileNames;
+    ObstacleTexturesMap obstalcesFileNames;
     obstalcesFileNames[Ground] = "ground.png";
     obstalcesFileNames[BricksWall] = "bricks.png";
     obstalcesFileNames[Ice] = "ice.png";
@@ -66,8 +67,8 @@ void BattleCity::init()
     static const QString obstaclesDir = "obstacles/";
     static const QString cursorsDir = "cursors/";
 
-    QMap<ObstacleType, QString>::const_iterator oIt = obstalcesFileNames.constBegin();
-    QMap<ObstacleType, QString>::const_iterator oEnd = obstalcesFileNames.constEnd();
+    ObstacleTexturesMap::const_iterator oIt = obstalcesFileNames.constBegin();
+    ObstacleTexturesMap::const_iterator oEnd = obstalcesFileNames.constEnd();
     for (; oIt != oEnd; ++oIt) {
         map[obstacleNames[oIt.key()]] = QString("%1%2%3").arg(qrcPrefix).arg(obstaclesDir).arg(*oIt);
         if (oIt.key() == Falcon || oIt.key() == FalconDestroyed)
@@ -104,6 +105,17 @@ void BattleCity::init()
     initTankTextureFiles(map, qrcPrefix, player1TankOneStarDir, player1TankOneStarTexturesNames);
     initTankTextureFiles(map, qrcPrefix, player1TankTwoStarsDir, player1TankTwoStarsTexturesNames);
     initTankTextureFiles(map, qrcPrefix, player1TankThreeStarsDir, player1TankThreeStarsTexturesNames);
+
+    static const QString projectileDir = "projectile/";
+    ProjectileTexturesMap projectileTexturesFileNames;
+    projectileTexturesFileNames[Forward] = "forward.png";
+    projectileTexturesFileNames[Backward] = "backward.png";
+    projectileTexturesFileNames[Left] = "left.png";
+    projectileTexturesFileNames[Right] = "right.png";
+    ProjectileTexturesMap::const_iterator pIt = projectileTexturesFileNames.constBegin();
+    ProjectileTexturesMap::const_iterator pEnd = projectileTexturesFileNames.constEnd();
+    for (; pIt != pEnd; ++pIt)
+        map[projectileTextureNames[pIt.key()]] = QString("%1%2%3").arg(qrcPrefix).arg(projectileDir).arg(*pIt);
 
     QPixmap pixmap;
     QMap<QString, QString>::const_iterator it = map.constBegin();
@@ -186,6 +198,25 @@ const BattleCity::ObstacleTexturesMap BattleCity::cursorNames = initCursorsMap()
 QPixmap BattleCity::cursorPixmap(ObstacleType type)
 {
     return pixmap(type, cursorNames);
+}
+
+static BattleCity::ProjectileTexturesMap initProjectileTextures()
+{
+    BattleCity::ProjectileTexturesMap map;
+    map[BattleCity::Forward] = "projectileForward";
+    map[BattleCity::Right] = "projectileRight";
+    map[BattleCity::Backward] = "projectileBackward";
+    map[BattleCity::Left] = "projectileLeft";
+    return map;
+}
+
+const BattleCity::ProjectileTexturesMap BattleCity::projectileTextureNames = initProjectileTextures();
+
+QPixmap BattleCity::projectileTexture(MoveDirection direction)
+{
+    QPixmap pixmap;
+    QPixmapCache::find(projectileTextureNames[direction], &pixmap);
+    return pixmap;
 }
 
 const BattleCity::TankTexturesMap BattleCity::basicTankNormalTexturesNames = initTexturesMap("basicTank");

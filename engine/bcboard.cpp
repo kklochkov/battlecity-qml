@@ -132,6 +132,7 @@ void BCBoard::init()
     for (quint8 i = 0; i < enemyTanksCount(); ++i) {
         BCEnemyTank *tank = createEnemyTank(tanks[i], this);
         tank->setSize(m_cellSize);
+        tank->hide();
         if (i % 3 == 1) {
             tank->setPosition(0, 6);
         } else if (i % 3 == 2) {
@@ -252,6 +253,8 @@ void BCBoard::keyPressEvent(QKeyEvent *event)   //TODO: must be in Controller
         tank->move(BattleCity::Left);
     if (event->key() == Qt::Key_Right)
         tank->move(BattleCity::Right);
+    if (event->key() == Qt::Key_Space)
+        tank->fire();
 }
 #ifdef BC_DEBUG_RECT
 void BCBoard::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
@@ -276,6 +279,7 @@ void BCBoard::setEnemyTankType(int index, int type, bool bonus)
         BCEnemyTank *newTank = ::createEnemyTank(BattleCity::TankType(type), this);
         newTank->setPosition(tank->row(), tank->column());
         newTank->setSize(tank->size());
+        newTank->setVisible(tank->isVisible());
         tank->deleteLater();
         m_enemyTanks[index] = newTank;
         tank = newTank;

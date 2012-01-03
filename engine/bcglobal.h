@@ -30,11 +30,12 @@ class BattleCity : public QObject
 public:
     enum MoveDirection { Forward, Backward, Left, Right };
     enum ObstacleType { Ground = QDeclarativeItem::UserType + 1, BricksWall, ConcreteWall, Ice, Camouflage, Falcon, FalconDestroyed, Water };
-    enum ObstacleProperty { Traversable, Nontraversable, Destroyable };
+    enum ItemProperty { Traversable, Nontraversable, Destroyable, Movable };
     enum TankType { Basic = Water + 1, Fast, Power, Armor };
 
     typedef QMap<ObstacleType, QString> ObstacleTexturesMap;
     typedef QMap<MoveDirection, QStringList> TankTexturesMap;
+    typedef QMap<MoveDirection, QString> ProjectileTexturesMap;
 
     BattleCity(QObject *parent = 0) : QObject(parent) { }
 
@@ -44,6 +45,8 @@ public:
 
     Q_INVOKABLE static QPixmap obstacleTexture(ObstacleType type);
     static QPixmap cursorPixmap(ObstacleType type);
+
+    Q_INVOKABLE static QPixmap projectileTexture(MoveDirection direction);
 
     Q_INVOKABLE static QPixmap tankTexture(TankType type, MoveDirection direction, int step, bool bonus);
 
@@ -62,6 +65,7 @@ private:
 private:
     static const ObstacleTexturesMap obstacleNames;
     static const ObstacleTexturesMap cursorNames;
+    static const ProjectileTexturesMap projectileTextureNames;
 
     static const TankTexturesMap basicTankNormalTexturesNames;
     static const TankTexturesMap basicTankBonusTexturesNames;

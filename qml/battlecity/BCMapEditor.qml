@@ -15,6 +15,8 @@ Rectangle {
         onMapLoaded: internal.init()
     }
 
+    Component.onCompleted: internal.init()
+
     Row {
         id: mainLayout
 
@@ -53,7 +55,6 @@ Rectangle {
                     }
                 }
             }
-
 
             Row {
                 id: buttonsLayout
@@ -233,7 +234,7 @@ Rectangle {
         function nextIndex(tankType)
         {
             var index = tankTypeToIndex(tankType) + 1;
-            return index == internal.tanks.length ? 0 : index;
+            return index === internal.tanks.length ? 0 : index;
         }
 
         function tankTypeToIndex(tankType)
@@ -257,4 +258,3 @@ Rectangle {
         }
     }
 }
-

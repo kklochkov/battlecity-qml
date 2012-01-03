@@ -22,10 +22,11 @@
 #include "bctank.h"
 #include "bcboard.h"
 
-BCAbstractTank::BCAbstractTank(BCBoard *board) :
-    BCMovableItem(board),
+BCAbstractTank::BCAbstractTank(BattleCity::MoveDirection direction, BCBoard *board) :
+    BCMovableItem(direction, board),
     m_currentAnimationStep(0),
-    m_destroyed(false)
+    m_destroyed(false),
+    m_projectile(0)
 {
 
 }
@@ -41,7 +42,7 @@ bool BCAbstractTank::move(BattleCity::MoveDirection direction)
     ++m_currentAnimationStep;
     if (m_currentAnimationStep == BattleCity::tankAnimationSteps)
         m_currentAnimationStep = 0;
-
+    //TODO: move this code into BCMovableItem?
     qreal speed = this->speed();
     qreal x = this->x();
     qreal y = this->y();
@@ -102,8 +103,34 @@ bool BCAbstractTank::move(BattleCity::MoveDirection direction)
     return true;
 }
 
+void BCAbstractTank::fire()
+{
+    if (m_projectile)
+        return;
+    //TODO: review me
+    m_projectile = new BCProjectile(1.0, direction(), board());
+    m_projectile->setSize(implicitWidth() / 6.0);
+    if (direction() == BattleCity::Forward) {
+        m_projectile->setPos(x() + (implicitWidth() - m_projectile->implicitWidth()) / 2.0, y() - 5.0);
+    } else if (direction() == BattleCity::Backward) {
+        m_projectile->setPos(x() + (implicitWidth() - m_projectile->implicitWidth()) / 2.0, y() + implicitWidth());
+    } else if (direction() == BattleCity::Left) {
+        m_projectile->setPos(x() - 5.0, y() + (implicitWidth() - m_projectile->implicitWidth()) / 2.0);
+    } else if (direction() == BattleCity::Right) {
+        m_projectile->setPos(x() + implicitWidth(), y() + (implicitWidth() - m_projectile->implicitWidth()) / 2.0);
+    }
+    connect(m_projectile, SIGNAL(exploded()), SLOT(projectileExploded()));
+    m_projectile->launch();
+}
+
+void BCAbstractTank::projectileExploded()
+{
+    delete m_projectile;
+    m_projectile = 0;
+}
+
 BCEnemyTank::BCEnemyTank(BCBoard *board) :
-    BCAbstractTank(board),
+    BCAbstractTank(BattleCity::Backward, board),
     m_bonus(false),
     m_bonusTexture(false),
     m_timer(new QTimer(this))

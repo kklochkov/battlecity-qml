@@ -23,6 +23,7 @@
 #include "bcglobal.h"
 
 class BCBoard;
+class QTimer;
 
 class BCItem : public QDeclarativeItem
 {
@@ -35,8 +36,6 @@ class BCItem : public QDeclarativeItem
 
     Q_PROPERTY(int type READ type CONSTANT)
 public:
-    enum ItemProperty { Traversable, Nontraversable, Destroyable, Movable };
-
     explicit BCItem(BCBoard *parent = 0);
 
     int row() const { return m_position.y(); }
@@ -44,7 +43,7 @@ public:
 
     qreal size() const { return implicitWidth(); }
 
-    virtual ItemProperty itemProperty() const = 0;
+    virtual BattleCity::ItemProperty itemProperty() const = 0;
 
     BCBoard *board() const { return m_board; }
 
@@ -80,7 +79,7 @@ public:
     explicit BCTraversableItem(BCBoard *parent = 0) :
         BCItem(parent) { }
 
-    ItemProperty itemProperty() const { return Traversable; }
+    BattleCity::ItemProperty itemProperty() const { return BattleCity::Traversable; }
 };
 
 class BCNontraversableItem : public BCItem
@@ -90,7 +89,7 @@ public:
     explicit BCNontraversableItem(BCBoard *parent = 0) :
         BCItem(parent) { }
 
-    ItemProperty itemProperty() const { return Nontraversable; }
+    BattleCity::ItemProperty itemProperty() const { return BattleCity::Nontraversable; }
 };
 
 class BCDestroyableItem : public BCNontraversableItem
@@ -100,17 +99,17 @@ public:
     explicit BCDestroyableItem(BCBoard *parent = 0) :
         BCNontraversableItem(parent) { }
 
-    ItemProperty itemProperty() const { return Destroyable; }
+    BattleCity::ItemProperty itemProperty() const { return BattleCity::Destroyable; }
 };
 
 class BCMovableItem : public BCItem
 {
     Q_OBJECT
 public:
-    explicit BCMovableItem(BCBoard *parent = 0) :
-        BCItem(parent), m_direction(BattleCity::Forward) { setZValue(1); }
+    BCMovableItem(BattleCity::MoveDirection direction, BCBoard *parent = 0) :
+        BCItem(parent), m_direction(direction) { setZValue(1); }
 
-    ItemProperty itemProperty() const { return Movable; }
+    BattleCity::ItemProperty itemProperty() const { return BattleCity::Movable; }
 
     virtual bool move(BattleCity::MoveDirection direction) = 0;
     virtual qreal speed() const = 0;
@@ -120,6 +119,32 @@ protected:
 
 private:
     BattleCity::MoveDirection m_direction;
+};
+
+class BCProjectile : public BCMovableItem
+{
+    Q_OBJECT
+public:
+    explicit BCProjectile(qreal speed, BattleCity::MoveDirection direction, BCBoard *parent = 0);
+
+    void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
+
+    qreal speed() const { return m_speed; }
+
+    void launch();
+
+protected:
+    bool move(BattleCity::MoveDirection direction);
+
+signals:
+    void exploded();
+
+private slots:
+    void timerFired();
+
+private:
+    qreal m_speed;
+    QTimer *m_timer;
 };
 
 class BCGroud : public BCTraversableItem

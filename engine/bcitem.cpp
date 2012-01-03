@@ -16,6 +16,8 @@
 #include <QPainter>
 #include <QStyleOptionGraphicsItem>
 #include <QPixmapCache>
+#include <QTimer>
+#include <QGraphicsScene>
 
 #include "bcitem.h"
 #include "bcglobal.h"
@@ -32,8 +34,6 @@ BCItem::BCItem(BCBoard *parent) :
 
 void BCItem::setPosition(int row, int column)
 {
-//    m_position.setX(row);
-//    m_position.setY(column);
     m_position.setX(column);
     m_position.setY(row);
     reposItem();
@@ -41,7 +41,6 @@ void BCItem::setPosition(int row, int column)
 
 void BCItem::reposItem()
 {
-//    setPos(row() * implicitWidth(), column() * implicitHeight());
     setPos(column() * implicitWidth(), row() * implicitHeight());
 }
 
@@ -96,4 +95,86 @@ bool BCMovableItem::move(BattleCity::MoveDirection direction)
         update();
     }
     return true;
+}
+
+BCProjectile::BCProjectile(qreal speed, BattleCity::MoveDirection direction, BCBoard *parent) :
+    BCMovableItem(direction, parent),
+    m_speed(speed)
+{
+    m_timer = new QTimer(this);
+    connect(m_timer, SIGNAL(timeout()), SLOT(timerFired()));
+}
+
+void BCProjectile::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
+{
+    Q_UNUSED(widget);
+    painter->drawPixmap(option->rect, BattleCity::projectileTexture(direction()));
+}
+
+bool BCProjectile::move(BattleCity::MoveDirection direction)
+{
+    //TODO: move this code into BCMovableItem?
+    qreal speed = this->speed();
+    qreal x = this->x();
+    qreal y = this->y();
+    QRectF viewRect;
+    static const qreal extraPixel = 1.0;
+
+    if (direction == BattleCity::Left) {
+        x -= speed;
+        viewRect.setRect(this->x() - speed, this->y(), speed, implicitHeight() + extraPixel);
+    }
+    if (direction == BattleCity::Right) {
+        x += speed;
+        viewRect.setRect(this->x() + implicitWidth() + speed + extraPixel, this->y(), speed, implicitHeight() + extraPixel);
+    }
+    if (direction == BattleCity::Forward) {
+        y -= speed;
+        viewRect.setRect(this->x(), this->y() - speed, implicitWidth() + extraPixel, speed);
+    }
+    if (direction == BattleCity::Backward) {
+        y += speed;
+        viewRect.setRect(this->x(), this->y() + implicitHeight() + speed + extraPixel, implicitWidth() + extraPixel, speed);
+    }
+
+#ifdef BC_DEBUG_RECT
+    board()->setDebugRect(viewRect);
+#endif
+
+    const QList<QGraphicsItem *> items = scene()->items(viewRect);
+    foreach (QGraphicsItem *item, items) {
+        BCItem *obstacle = qobject_cast<BCItem *>(item);
+        if (item == this || !obstacle || obstacle->itemProperty() == BattleCity::Traversable)
+            continue;
+        const QRectF obstacleRect(obstacle->x(), obstacle->y(), obstacle->implicitWidth(), obstacle->implicitHeight());
+        if (viewRect.intersects(obstacleRect))
+            return false;
+    }
+
+    if (x < 0 && direction == BattleCity::Left)
+        return false;
+    if (((x + implicitWidth()) >= board()->implicitWidth()) && direction == BattleCity::Right)
+        return false;
+    if (y < 0 && direction == BattleCity::Forward)
+        return false;
+    if (((y + implicitHeight()) >= board()->implicitHeight()) && direction == BattleCity::Backward)
+        return false;
+
+    setPos(x, y);
+    update();
+    return true;
+}
+
+void BCProjectile::launch()
+{
+    m_timer->start();
+}
+
+void BCProjectile::timerFired()
+{
+    if (move(direction())) {
+        m_timer->start();
+    } else {
+        emit exploded();
+    }
 }
