@@ -32,6 +32,7 @@ public:
     enum ObstacleType { Ground = QDeclarativeItem::UserType + 1, BricksWall, ConcreteWall, Ice, Camouflage, Falcon, FalconDestroyed, Water };
     enum ItemProperty { Traversable, Nontraversable, Destroyable, Movable };
     enum TankType { Basic = Water + 1, Fast, Power, Armor };
+    enum Edge { NoneEdge, TopEdge, RightEdge, BottomEdge, LeftEdge };
 
     typedef QMap<ObstacleType, QString> ObstacleTexturesMap;
     typedef QMap<MoveDirection, QStringList> TankTexturesMap;

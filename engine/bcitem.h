@@ -111,11 +111,15 @@ public:
 
     BattleCity::ItemProperty itemProperty() const { return BattleCity::Movable; }
 
-    virtual bool move(BattleCity::MoveDirection direction) = 0;
+    virtual bool move(BattleCity::MoveDirection direction);
     virtual qreal speed() const = 0;
 
 protected:
     BattleCity::MoveDirection direction() const { return m_direction; }
+    virtual BattleCity::Edge intersectsBoardBoundingRect(qreal x, qreal y, BattleCity::MoveDirection direction) const;
+    virtual BCItem *collidesWithObstacle(const QRectF &viewRect, BattleCity::MoveDirection direction, BattleCity::Edge *edge = 0) const;
+    virtual void adjustIntersectionPointWithBoardBoundingRect(BattleCity::Edge edge, qreal &x, qreal &y) const;
+    virtual void adjustIntersectionPointWithObstacle(const BCItem *obstacle, BattleCity::Edge edge, qreal &x, qreal &y) const;
 
 private:
     BattleCity::MoveDirection m_direction;
@@ -132,9 +136,6 @@ public:
     qreal speed() const { return m_speed; }
 
     void launch();
-
-protected:
-    bool move(BattleCity::MoveDirection direction);
 
 signals:
     void exploded();

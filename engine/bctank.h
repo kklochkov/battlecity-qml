@@ -41,7 +41,11 @@ public:
 
     bool destroyed() const { return m_destroyed; }
 
-    void fire();
+    virtual void fire();
+
+protected:
+    virtual void adjustIntersectionPointWithBoardBoundingRect(BattleCity::Edge edge, qreal &x, qreal &y) const;
+    virtual void adjustIntersectionPointWithObstacle(const BCItem *obstacle, BattleCity::Edge edge, qreal &x, qreal &y) const;
 
 private slots:
     void projectileExploded();

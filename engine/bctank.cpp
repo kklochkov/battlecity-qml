@@ -33,74 +33,53 @@ BCAbstractTank::BCAbstractTank(BattleCity::MoveDirection direction, BCBoard *boa
 
 bool BCAbstractTank::move(BattleCity::MoveDirection direction)
 {
-    if (!BCMovableItem::move(direction))
-        return false;
-
-    if (!board())
-        return false;
-
     ++m_currentAnimationStep;
     if (m_currentAnimationStep == BattleCity::tankAnimationSteps)
         m_currentAnimationStep = 0;
-    //TODO: move this code into BCMovableItem?
-    qreal speed = this->speed();
-    qreal x = this->x();
-    qreal y = this->y();
-    QRectF viewRect;
-    static const qreal extraPixel = 1.0;
 
-    if (direction == BattleCity::Left) {
-        x -= speed;
-        viewRect.setRect(this->x() - speed, this->y(), speed, implicitHeight() + extraPixel);
-    }
-    if (direction == BattleCity::Right) {
-        x += speed;
-        viewRect.setRect(this->x() + implicitWidth() + speed + extraPixel, this->y(), speed, implicitHeight() + extraPixel);
-    }
-    if (direction == BattleCity::Forward) {
-        y -= speed;
-        viewRect.setRect(this->x(), this->y() - speed, implicitWidth() + extraPixel, speed);
-    }
-    if (direction == BattleCity::Backward) {
-        y += speed;
-        viewRect.setRect(this->x(), this->y() + implicitHeight() + speed + extraPixel, implicitWidth() + extraPixel, speed);
-    }
+    return BCMovableItem::move(direction);
+}
 
-#ifdef BC_DEBUG_RECT
-    board()->setDebugRect(viewRect);
-#endif
-
-    const QList<QGraphicsItem *> items = scene()->items(viewRect);
-    foreach (QGraphicsItem *item, items) {
-        BCItem *obstacle = qobject_cast<BCItem *>(item);
-        if (item == this || !obstacle || obstacle->itemProperty() == BattleCity::Traversable)
-            continue;
-        const QRectF obstacleRect(obstacle->x(), obstacle->y(), obstacle->implicitWidth(), obstacle->implicitHeight());
-        if (viewRect.intersects(obstacleRect)) {
-            if (direction == BattleCity::Left)
-                x = obstacle->x() + obstacle->implicitWidth();
-            if (direction == BattleCity::Right)
-                x = obstacle->x() - implicitWidth();
-            if (direction == BattleCity::Forward)
-                y = obstacle->y() + obstacle->implicitHeight();
-            if (direction == BattleCity::Backward)
-                y = obstacle->y() - implicitHeight();
-            break;
-        }
-    }
-
-    if (x < 0 && direction == BattleCity::Left)
+void BCAbstractTank::adjustIntersectionPointWithBoardBoundingRect(BattleCity::Edge edge, qreal &x, qreal &y) const
+{
+    switch (edge) {
+    case BattleCity::LeftEdge:
         x = 0;
-    if (((x + implicitWidth()) >= board()->implicitWidth()) && direction == BattleCity::Right)
-        x = board()->implicitWidth() - implicitWidth() - extraPixel;
-    if (y < 0 && direction == BattleCity::Forward)
+        break;
+    case BattleCity::RightEdge:
+        x = board()->implicitWidth() - implicitWidth();// - extraPixel;
+        break;
+    case BattleCity::TopEdge:
         y = 0;
-    if (((y + implicitHeight()) >= board()->implicitHeight()) && direction == BattleCity::Backward)
-        y = board()->implicitHeight() - implicitHeight() - extraPixel;
+        break;
+    case BattleCity::BottomEdge:
+        y = board()->implicitHeight() - implicitHeight();// - extraPixel;
+        break;
+    case BattleCity::NoneEdge:
+        break;
+    }
+}
 
-    setPos(x, y);
-    update();
-    return true;
+void BCAbstractTank::adjustIntersectionPointWithObstacle(const BCItem *obstacle, BattleCity::Edge edge, qreal &x, qreal &y) const
+{
+    if (!obstacle)
+        return;
+    switch (edge) {
+    case BattleCity::LeftEdge:
+        x = obstacle->x() - implicitWidth();
+        break;
+    case BattleCity::RightEdge:
+        x = obstacle->x() + obstacle->implicitWidth();
+        break;
+    case BattleCity::TopEdge:
+        y = obstacle->y() - implicitHeight();
+        break;
+    case BattleCity::BottomEdge:
+        y = obstacle->y() + obstacle->implicitHeight();
+        break;
+    case BattleCity::NoneEdge:
+        break;
+    }
 }
 
 void BCAbstractTank::fire()
@@ -108,7 +87,7 @@ void BCAbstractTank::fire()
     if (m_projectile)
         return;
     //TODO: review me
-    m_projectile = new BCProjectile(1.0, direction(), board());
+    m_projectile = new BCProjectile(5.0, direction(), board());
     m_projectile->setSize(implicitWidth() / 6.0);
     if (direction() == BattleCity::Forward) {
         m_projectile->setPos(x() + (implicitWidth() - m_projectile->implicitWidth()) / 2.0, y() - 5.0);
@@ -126,7 +105,6 @@ void BCAbstractTank::fire()
 void BCAbstractTank::projectileExploded()
 {
     delete m_projectile;
-    m_projectile = 0;
 }
 
 BCEnemyTank::BCEnemyTank(BCBoard *board) :

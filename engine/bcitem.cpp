@@ -90,30 +90,12 @@ void BCItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QW
 
 bool BCMovableItem::move(BattleCity::MoveDirection direction)
 {
-    if (m_direction != direction) {
+    if (!board())
+        return false;
+
+    if (m_direction != direction)
         m_direction = direction;
-        update();
-    }
-    return true;
-}
 
-BCProjectile::BCProjectile(qreal speed, BattleCity::MoveDirection direction, BCBoard *parent) :
-    BCMovableItem(direction, parent),
-    m_speed(speed)
-{
-    m_timer = new QTimer(this);
-    connect(m_timer, SIGNAL(timeout()), SLOT(timerFired()));
-}
-
-void BCProjectile::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
-{
-    Q_UNUSED(widget);
-    painter->drawPixmap(option->rect, BattleCity::projectileTexture(direction()));
-}
-
-bool BCProjectile::move(BattleCity::MoveDirection direction)
-{
-    //TODO: move this code into BCMovableItem?
     qreal speed = this->speed();
     qreal x = this->x();
     qreal y = this->y();
@@ -141,28 +123,106 @@ bool BCProjectile::move(BattleCity::MoveDirection direction)
     board()->setDebugRect(viewRect);
 #endif
 
+    const BattleCity::Edge edge = intersectsBoardBoundingRect(x, y, direction);
+    bool res = edge == BattleCity::NoneEdge ? true : false;
+    if (edge == BattleCity::NoneEdge) {
+        BattleCity::Edge obstacleEdge = BattleCity::NoneEdge;
+        const BCItem *obstacle = collidesWithObstacle(viewRect, direction, &obstacleEdge);
+        res = obstacleEdge == BattleCity::NoneEdge ? true : false;
+        adjustIntersectionPointWithObstacle(obstacle, obstacleEdge, x, y);
+    } else {
+        adjustIntersectionPointWithBoardBoundingRect(edge, x, y);
+    }
+
+    setPos(x, y);
+    update();
+    return res;
+}
+
+BattleCity::Edge BCMovableItem::intersectsBoardBoundingRect(qreal x, qreal y, BattleCity::MoveDirection direction) const
+{
+    BattleCity::Edge edge = BattleCity::NoneEdge;
+    switch (direction) {
+    case BattleCity::Left:
+        if (x < 0)
+            edge = BattleCity::LeftEdge;
+        break;
+    case BattleCity::Right:
+        if ((x + implicitWidth()) >= board()->implicitWidth())
+            edge = BattleCity::RightEdge;
+        break;
+    case BattleCity::Forward:
+        if (y < 0)
+            edge = BattleCity::TopEdge;
+        break;
+    case  BattleCity::Backward:
+        if ((y + implicitHeight()) >= board()->implicitHeight())
+            edge = BattleCity::BottomEdge;
+        break;
+    }
+    return edge;
+}
+
+BCItem *BCMovableItem::collidesWithObstacle(const QRectF &viewRect, BattleCity::MoveDirection direction, BattleCity::Edge *edge) const
+{
     const QList<QGraphicsItem *> items = scene()->items(viewRect);
     foreach (QGraphicsItem *item, items) {
         BCItem *obstacle = qobject_cast<BCItem *>(item);
         if (item == this || !obstacle || obstacle->itemProperty() == BattleCity::Traversable)
             continue;
         const QRectF obstacleRect(obstacle->x(), obstacle->y(), obstacle->implicitWidth(), obstacle->implicitHeight());
-        if (viewRect.intersects(obstacleRect))
-            return false;
+        if (viewRect.intersects(obstacleRect)) {
+            if (edge) {
+                switch (direction) {
+                case BattleCity::Left:
+                    (*edge) = BattleCity::RightEdge;
+                    break;
+                case BattleCity::Right:
+                    (*edge) = BattleCity::LeftEdge;
+                    break;
+                case BattleCity::Forward:
+                    (*edge) = BattleCity::BottomEdge;
+                    break;
+                case BattleCity::Backward:
+                    (*edge) = BattleCity::TopEdge;
+                    break;
+                }
+            }
+            return obstacle;
+        }
     }
+    if (edge)
+        (*edge) = BattleCity::NoneEdge;
+    return 0;
+}
 
-    if (x < 0 && direction == BattleCity::Left)
-        return false;
-    if (((x + implicitWidth()) >= board()->implicitWidth()) && direction == BattleCity::Right)
-        return false;
-    if (y < 0 && direction == BattleCity::Forward)
-        return false;
-    if (((y + implicitHeight()) >= board()->implicitHeight()) && direction == BattleCity::Backward)
-        return false;
+void BCMovableItem::adjustIntersectionPointWithBoardBoundingRect(BattleCity::Edge edge, qreal &x, qreal &y) const
+{
+    Q_UNUSED(edge);
+    Q_UNUSED(x);
+    Q_UNUSED(y);
+}
 
-    setPos(x, y);
-    update();
-    return true;
+void BCMovableItem::adjustIntersectionPointWithObstacle(const BCItem *obstacle, BattleCity::Edge edge, qreal &x, qreal &y) const
+{
+    Q_UNUSED(obstacle);
+    Q_UNUSED(edge);
+    Q_UNUSED(x);
+    Q_UNUSED(y);
+}
+
+BCProjectile::BCProjectile(qreal speed, BattleCity::MoveDirection direction, BCBoard *parent) :
+    BCMovableItem(direction, parent),
+    m_speed(speed)
+{
+    m_timer = new QTimer(this);
+    connect(m_timer, SIGNAL(timeout()), SLOT(timerFired()));
+}
+
+void BCProjectile::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
+{
+    Q_UNUSED(widget);
+    painter->drawPixmap(option->rect, BattleCity::projectileTexture(direction()));
 }
 
 void BCProjectile::launch()
